@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String              @id @default(cuid())
+  email            String              @unique
+  password         String
+  name             String
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  assignments      Assignment[]
+  generatedReports Report[]
+  workspaceRoles   UserWorkspaceRole[]
+}
+
+model Workspace {
+  id                   String               @id @default(cuid())
+  name                 String
+  slug                 String               @unique
+  type                 WorkspaceType
+  description          String?
+  registrationFields   Json?
+  isPublicRegistration Boolean              @default(false)
+  requiresPayment      Boolean              @default(false)
+  paymentConfig        Json?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  address              String?
+  logoUrl              String?
+  motto                String?
+  primaryColor         String?              @default("#6C5DD3")
+  stampUrl             String?
+  formTemplates        FormTemplate[]
+  units                OrganizationalUnit[]
+  reports              Report[]
+  reportTemplates      ReportTemplate[]
+  templates            Template[]
+  members              UserWorkspaceRole[]
+}
+
+model OrganizationalUnit {
+  id          String               @id @default(cuid())
+  name        String
+  type        String
+  workspaceId String
+  parentId    String?
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  parent      OrganizationalUnit?  @relation("UnitTree", fields: [parentId], references: [id])
+  children    OrganizationalUnit[] @relation("UnitTree")
+  workspace   Workspace            @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members     UserWorkspaceRole[]
+}
+
+model UserWorkspaceRole {
+  id              String              @id @default(cuid())
+  userId          String
+  workspaceId     String
+  unitId          String?
+  role            Role                @default(MEMBER)
+  status          MemberStatus        @default(PENDING)
+  profileData     Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  isPublicProfile Boolean             @default(true)
+  publicSlug      String?             @unique
+  formAssignments FormAssignment[]
+  reports         Report[]
+  unit            OrganizationalUnit? @relation(fields: [unitId], references: [id])
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace       Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model FormTemplate {
+  id          String           @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  fields      Json
+  submitLabel String           @default("Submit Registration")
+  status      String           @default("Draft")
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  isPublic    Boolean          @default(false)
+  publicSlug  String?          @unique
+  assignments FormAssignment[]
+  workspace   Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model FormAssignment {
+  id            String               @id @default(cuid())
+  templateId    String
+  memberId      String
+  assignedBy    String
+  assignedAt    DateTime             @default(now())
+  dueDate       DateTime?
+  publicSlug    String               @unique
+  isActive      Boolean              @default(true)
+  allowMultiple Boolean              @default(false)
+  responses     Json?
+  status        FormAssignmentStatus @default(PENDING)
+  submittedAt   DateTime?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  member        UserWorkspaceRole    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  template      FormTemplate         @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  submissions   FormSubmission[]
+}
+
+model FormSubmission {
+  id           String         @id @default(cuid())
+  assignmentId String
+  responses    Json
+  submittedAt  DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  assignment   FormAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+}
+
+model Report {
+  id              String             @id @default(cuid())
+  type            ReportType
+  referenceNumber String             @unique
+  workspaceId     String
+  memberId        String?
+  generatedBy     String
+  templateName    String
+  qrCodeData      String
+  isVerified      Boolean            @default(true)
+  pdfUrl          String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  generatedByUser User               @relation(fields: [generatedBy], references: [id], onDelete: Cascade)
+  member          UserWorkspaceRole? @relation(fields: [memberId], references: [id])
+  workspace       Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model ReportTemplate {
+  id           String             @id @default(cuid())
+  workspaceId  String
+  name         String
+  description  String?
+  templateType ReportTemplateType
+  config       Json?
+  isDefault    Boolean            @default(false)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  workspace    Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([workspaceId])
+}
+
+model Template {
+  id              String            @id @default(cuid())
+  title           String
+  workspaceId     String
+  activeVersionId String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  versions        TemplateVersion[]
+}
+
+model TemplateVersion {
+  id            String       @id @default(cuid())
+  versionNumber Int
+  templateId    String
+  structure     Json
+  docxUrl       String
+  publishedAt   DateTime     @default(now())
+  assignments   Assignment[]
+  template      Template     @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
+model Assignment {
+  id                String           @id @default(cuid())
+  templateVersionId String
+  workerId          String
+  status            AssignmentStatus @default(PENDING)
+  dueDate           DateTime?
+  answers           Json?
+  submittedAt       DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  templateVersion   TemplateVersion  @relation(fields: [templateVersionId], references: [id], onDelete: Cascade)
+  worker            User             @relation(fields: [workerId], references: [id], onDelete: Cascade)
+}
+
+enum FormAssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  COMPLETED
+}
+
+enum WorkspaceType {
+  MINISTRY
+  CONSTRUCTION
+  TRAINING
+  GENERAL
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+  VIEWER
+}
+
+enum MemberStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  INACTIVE
+}
+
+enum ReportType {
+  TRANSCRIPT
+  CERTIFICATE
+  RECEIPT
+  MEMBERSHIP_CARD
+  CUSTOM
+  ATTENDANCE
+}
+
+enum ReportTemplateType {
+  MINISTRY_REPORT
+  CONSTRUCTION_REPORT
+  TRAINING_REPORT
+  GENERIC
+  CUSTOM
+}
+
+enum AssignmentStatus {
+  PENDING
+  IN_PROGRESS
+  SUBMITTED
+  APPROVED
+  REJECTED
+}

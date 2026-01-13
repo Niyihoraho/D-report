@@ -1,0 +1,98 @@
+[
+  {
+    "id": 1223,
+    "guestName": "Alex Trie",
+    "email": "Alex08@gmail.com",
+    "roomNumber": "S-01",
+    "roomType": "Single",
+    "checkIn": "Jan 21, 2025",
+    "checkOut": "Jan 26, 2025",
+    "totalGuests": "1 Adult",
+    "status": "New",
+    "avatar": "https://i.pravatar.cc/150?u=1"
+  },
+  {
+    "id": 1224,
+    "guestName": "Annette Black",
+    "email": "Ann23@gmail.com",
+    "roomNumber": "S-22",
+    "roomType": "Single",
+    "checkIn": "Jan 8, 2025",
+    "checkOut": "Jan 20, 2025",
+    "totalGuests": "1 Adult",
+    "status": "Checked In",
+    "avatar": "https://i.pravatar.cc/150?u=2"
+  },
+  {
+    "id": 1225,
+    "guestName": "Jerome Bell",
+    "email": "JB002@gmail.com",
+    "roomNumber": "D-08",
+    "roomType": "Double",
+    "checkIn": "Jan 13, 2025",
+    "checkOut": "Jan 21, 2025",
+    "totalGuests": "2 Adults",
+    "status": "Confirmed",
+    "avatar": "https://i.pravatar.cc/150?u=3"
+  },
+  {
+    "id": 1226,
+    "guestName": "Jenny Wilson",
+    "email": "WilsoN77@gmail.com",
+    "roomNumber": "D-05",
+    "roomType": "Double",
+    "checkIn": "Jan 27, 2025",
+    "checkOut": "Jan 28, 2025",
+    "totalGuests": "2 Adults",
+    "status": "Checked Out",
+    "avatar": "https://i.pravatar.cc/150?u=4"
+  },
+  {
+    "id": 1227,
+    "guestName": "Kristin Watson",
+    "email": "Kris09@gmail.com",
+    "roomNumber": "De-02",
+    "roomType": "Deluxe",
+    "checkIn": "Jan 7, 2025",
+    "checkOut": "Jan 20, 2025",
+    "totalGuests": "2 Adults + 1 Child",
+    "status": "Cancelled",
+    "avatar": "https://i.pravatar.cc/150?u=5"
+  },
+  {
+    "id": 1228,
+    "guestName": "Jenny Wilson",
+    "email": "WilsoN77@gmail.com",
+    "roomNumber": "D-05",
+    "roomType": "Double",
+    "checkIn": "Jan 27, 2025",
+    "checkOut": "Jan 28, 2025",
+    "totalGuests": "2 Adults",
+    "status": "Cancelled",
+    "avatar": "https://i.pravatar.cc/150?u=6"
+  },
+  {
+    "id": 1229,
+    "guestName": "Alex Trie",
+    "email": "Kris09@gmail.com",
+    "roomNumber": "De-02",
+    "roomType": "Deluxe",
+    "checkIn": "Jan 7, 2025",
+    "checkOut": "Jan 20, 2025",
+    "totalGuests": "2 Adults + 1 Child",
+    "status": "Cancelled",
+    "avatar": "https://i.pravatar.cc/150?u=7"
+  },
+  {
+    "id": 1240,
+    "guestName": "Jerome Bell",
+    "email": "Kris09@gmail.com",
+    "roomNumber": "De-02",
+    "roomType": "Deluxe",
+    "checkIn": "Jan 7, 2025",
+    "checkOut": "Jan 20, 2025",
+    "totalGuests": "2 Adults + 1 Child",
+    "status": "Cancelled",
+    "avatar": "https://i.pravatar.cc/150?u=8"
+  }
+]

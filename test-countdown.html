@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #1a1a2e;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: #16213e;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .countdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: #4ade80;
+        }
+        .countdown-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #166534;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: white;
+            color: #16213e;
+            border: 2px solid #4ade80;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #f0fdf4;
+        }
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #166534;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="success-icon">✓</div>
+        <h1>Form Submitted Successfully!</h1>
+        <p style="color: #4ade80; margin: 10px 0;">Submitted on 1/7/2026</p>
+        <p style="color: #94a3b8;">Thank you for completing this form. Your response has been recorded.</p>
+        
+        <div class="countdown">
+            <div class="countdown-circle" id="countdown">3</div>
+            <p>Form will reset in <span id="countdown-text">3</span> second<span id="plural">s</span>...</p>
+        </div>
+        
+        <button onclick="resetNow()">Submit Another Response Now</button>
+    </div>
+
+    <script>
+        let countdown = 3;
+        const countdownEl = document.getElementById('countdown');
+        const countdownText = document.getElementById('countdown-text');
+        const plural = document.getElementById('plural');
+
+        const interval = setInterval(() => {
+            countdown--;
+            countdownEl.textContent = countdown;
+            countdownText.textContent = countdown;
+            plural.textContent = countdown !== 1 ? 's' : '';
+
+            if (countdown <= 0) {
+                clearInterval(interval);
+                resetForm();
+            }
+        }, 1000);
+
+        function resetForm() {
+            alert('Form has been reset! (In the actual app, the form would now show empty fields)');
+            // Reset countdown for demo
+            countdown = 3;
+            countdownEl.textContent = countdown;
+            countdownText.textContent = countdown;
+            plural.textContent = 's';
+        }
+
+        function resetNow() {
+            clearInterval(interval);
+            resetForm();
+        }
+    </script>
+</body>
+</html>
