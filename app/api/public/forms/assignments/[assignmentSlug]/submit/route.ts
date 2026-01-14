@@ -95,6 +95,11 @@ export async function POST(
                             }
                         }
                     }
+                },
+                submissions: {
+                    orderBy: {
+                        submittedAt: 'desc'
+                    }
                 }
             }
         })

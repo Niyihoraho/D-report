@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 // GET /api/workspaces/[id]/members/[memberId]/assignments
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string; memberId: string } }
+    { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
     try {
-        const { id: workspaceId, memberId } = params
+        const { id: workspaceId, memberId } = await params
 
         // Verify member exists and belongs to workspace
         const member = await prisma.userWorkspaceRole.findUnique({

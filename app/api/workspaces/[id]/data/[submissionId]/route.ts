@@ -239,3 +239,48 @@ export async function GET(
         )
     }
 }
+
+export async function DELETE(
+    request: NextRequest,
+    context: { params: Promise<{ id: string; submissionId: string }> }
+) {
+    const { id, submissionId } = await context.params
+    try {
+        const submission = await prisma.formSubmission.findUnique({
+            where: { id: submissionId },
+            include: {
+                assignment: {
+                    include: {
+                        member: true
+                    }
+                }
+            }
+        })
+
+        if (!submission) {
+            return NextResponse.json(
+                { error: 'Activity not found' },
+                { status: 404 }
+            )
+        }
+
+        if (submission.assignment.member.workspaceId !== id) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 403 }
+            )
+        }
+
+        await prisma.formSubmission.delete({
+            where: { id: submissionId }
+        })
+
+        return NextResponse.json({ message: 'Activity deleted successfully' })
+    } catch (error) {
+        console.error('Error deleting activity:', error)
+        return NextResponse.json(
+            { error: 'Failed to delete activity' },
+            { status: 500 }
+        )
+    }
+}

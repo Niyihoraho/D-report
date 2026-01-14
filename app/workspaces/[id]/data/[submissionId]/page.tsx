@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Calendar, FileText, User, Mail, Download, Clock, Loader2, ChevronDown } from "lucide-react"
+import { ArrowLeft, Calendar, FileText, User, Mail, Download, Clock, Loader2, ChevronDown, Trash2 } from "lucide-react"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
 import { formatFieldValue, formatFieldName, organizeProfileData } from "@/lib/profile-utils"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
+import { ConfirmDialog } from "@/components/ConfirmDialog"
 
 interface SubmissionDetail {
     id: string
@@ -49,6 +50,55 @@ export default function SubmissionDetailsPage() {
     const [submission, setSubmission] = useState<SubmissionDetail | null>(null)
     const [loading, setLoading] = useState(true)
     const [exporting, setExporting] = useState(false)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
+    const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+    const handleDeleteActivity = async () => {
+        if (!confirmDeleteId) return
+
+        const idToDelete = confirmDeleteId
+        const isCurrentSubmission = idToDelete === submissionId
+
+        // Optimistic update for history items
+        const previousSubmission = submission
+        if (!isCurrentSubmission && submission) {
+            setSubmission({
+                ...submission,
+                history: submission.history?.filter(h => h.id !== idToDelete)
+            })
+            // Close modal immediately for optimistic feel
+            setConfirmDeleteId(null)
+        } else {
+            // For current submission, we still want to show loading state in the modal
+            setDeletingId(idToDelete)
+        }
+
+        try {
+            const response = await fetch(`/api/workspaces/${workspaceId}/data/${idToDelete}`, {
+                method: 'DELETE'
+            })
+
+            if (!response.ok) throw new Error('Failed to delete activity')
+
+            toast.success('Activity deleted successfully')
+
+            if (isCurrentSubmission) {
+                router.push(`/workspaces/${workspaceId}/data`)
+            }
+            // No need to fetchSubmission for history items as we updated optimistically
+        } catch (error) {
+            console.error('Error deleting activity:', error)
+            toast.error('Failed to delete activity')
+
+            // Revert optimistic update
+            if (!isCurrentSubmission && previousSubmission) {
+                setSubmission(previousSubmission)
+            }
+        } finally {
+            setDeletingId(null)
+            setConfirmDeleteId(null)
+        }
+    }
 
     useEffect(() => {
         if (workspaceId && submissionId) {
@@ -290,59 +340,83 @@ export default function SubmissionDetailsPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                                {submission.history.map((hist, index) => {
-                                    if (hist.responses) {
-                                        console.log(`History ${index} keys:`, Object.keys(hist.responses));
-                                    }
-                                    return (
-                                        <div
-                                            key={hist.id}
-                                            className={`flex items-start justify-between p-3 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${hist.id === submission.id ? 'border-[#6C5DD3] bg-[#6C5DD3]/5 dark:bg-[#6C5DD3]/10' : 'border-gray-100 dark:border-gray-800'
-                                                }`}
-                                            onClick={() => router.push(`/workspaces/${workspaceId}/data/${hist.id}`)}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${hist.id === submission.id
-                                                    ? 'bg-[#6C5DD3] text-white'
-                                                    : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
-                                                    }`}>
-                                                    {submission.history && submission.history.length - index}
-                                                </div>
-                                                <div>
-                                                    <span className="text-sm font-medium">
-                                                        {(() => {
-                                                            const indexLabel = `Activity ${submission.history && submission.history.length - index}`;
-                                                            let displayValue = "";
+                                <AnimatePresence mode="popLayout">
+                                    {submission.history.map((hist, index) => {
+                                        if (hist.responses) {
+                                            console.log(`History ${index} keys:`, Object.keys(hist.responses));
+                                        }
+                                        return (
+                                            <motion.div
+                                                key={hist.id}
+                                                layout
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                                                className={`flex items-start justify-between p-3 rounded-lg border cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group ${hist.id === submission.id ? 'border-[#6C5DD3] bg-[#6C5DD3]/5 dark:bg-[#6C5DD3]/10' : 'border-gray-100 dark:border-gray-800'
+                                                    }`}
+                                                onClick={() => router.push(`/workspaces/${workspaceId}/data/${hist.id}`)}
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${hist.id === submission.id
+                                                        ? 'bg-[#6C5DD3] text-white'
+                                                        : 'bg-gray-100 text-gray-500 dark:bg-gray-800'
+                                                        }`}>
+                                                        {submission.history && submission.history.length - index}
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-sm font-medium">
+                                                            {(() => {
+                                                                const indexLabel = `Activity ${submission.history && submission.history.length - index}`;
+                                                                let displayValue = "";
 
-                                                            if (hist.responses) {
-                                                                const keys = Object.keys(hist.responses);
-                                                                const activityKey = keys.find(k => k === 'Activities') ||
-                                                                    keys.find(k => k.toLowerCase().includes('activity')) ||
-                                                                    keys.find(k => k.toLowerCase().includes('title'));
+                                                                if (hist.responses) {
+                                                                    const keys = Object.keys(hist.responses);
+                                                                    const activityKey = keys.find(k => k === 'Activities') ||
+                                                                        keys.find(k => k.toLowerCase().includes('activity')) ||
+                                                                        keys.find(k => k.toLowerCase().includes('title'));
 
-                                                                if (activityKey && hist.responses[activityKey]) {
-                                                                    let val = String(hist.responses[activityKey]);
-                                                                    if (val.length > 30) val = val.substring(0, 30) + '...';
-                                                                    displayValue = val;
+                                                                    if (activityKey && hist.responses[activityKey]) {
+                                                                        let val = String(hist.responses[activityKey]);
+                                                                        if (val.length > 30) val = val.substring(0, 30) + '...';
+                                                                        displayValue = val;
+                                                                    }
                                                                 }
-                                                            }
 
-                                                            return displayValue ? `${indexLabel}: ${displayValue}` : indexLabel;
-                                                        })()}
-                                                    </span>
-                                                    <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                                                        {new Date(hist.submittedAt).toLocaleDateString()}
+                                                                return displayValue ? `${indexLabel}: ${displayValue}` : indexLabel;
+                                                            })()}
+                                                        </span>
+                                                        <div className="flex items-center space-x-2 text-xs text-muted-foreground">
+                                                            {new Date(hist.submittedAt).toLocaleDateString()}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            {hist.id === submission.id && (
-                                                <Badge variant="outline" className="text-xs border-[#6C5DD3] text-[#6C5DD3]">
-                                                    Current
-                                                </Badge>
-                                            )}
-                                        </div>
-                                    )
-                                })}
+                                                <div className="flex items-center gap-2">
+                                                    {hist.id === submission.id && (
+                                                        <Badge variant="outline" className="text-xs border-[#6C5DD3] text-[#6C5DD3]">
+                                                            Current
+                                                        </Badge>
+                                                    )}
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation()
+                                                            setConfirmDeleteId(hist.id)
+                                                        }}
+                                                        disabled={deletingId === hist.id}
+                                                    >
+                                                        {deletingId === hist.id ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <Trash2 className="h-4 w-4" />
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            </motion.div>
+                                        )
+                                    })}
+                                </AnimatePresence>
                             </CardContent>
                         </Card>
                     )}
@@ -408,6 +482,15 @@ export default function SubmissionDetailsPage() {
                     </Card>
                 </motion.div>
             </div>
+            <ConfirmDialog
+                open={!!confirmDeleteId}
+                onOpenChange={(open) => !open && setConfirmDeleteId(null)}
+                title="Delete Activity"
+                description="Are you sure you want to delete this activity? This action cannot be undone."
+                confirmLabel={deletingId ? "Deleting..." : "Delete"}
+                variant="destructive"
+                onConfirm={handleDeleteActivity}
+            />
         </div>
     )
 }

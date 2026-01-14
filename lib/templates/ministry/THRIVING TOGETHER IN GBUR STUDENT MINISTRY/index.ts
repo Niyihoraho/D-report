@@ -387,7 +387,7 @@ export const gburThrivingTemplate: TemplateGenerator = async (data: ReportData) 
         .image-field-row {
             padding: 15px 10px;
             border-bottom: 1px solid #e2e8f0;
-            display: block;
+            display: block;git init
         }
         
         .image-field-row .field-label {

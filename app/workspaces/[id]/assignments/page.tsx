@@ -43,9 +43,7 @@ export default function AssignmentsPage() {
         <div className="space-y-6">
             <PageHeader
                 title="Assignments"
-                actionLabel="New Assignment"
-                onAction={() => { /* Open assign dialog - needs context or redirect */ }}
-                showAction={false} // Hidden for now as assignment is done via members page
+
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

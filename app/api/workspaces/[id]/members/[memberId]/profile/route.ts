@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string; memberId: string } }
+    { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
     try {
-        const { id: workspaceId, memberId } = params
+        const { id: workspaceId, memberId } = await params
 
         const member = await prisma.userWorkspaceRole.findUnique({
             where: { id: memberId },
@@ -58,10 +58,10 @@ export async function GET(
 
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string; memberId: string } }
+    { params }: { params: Promise<{ id: string; memberId: string }> }
 ) {
     try {
-        const { id: workspaceId, memberId } = params
+        const { id: workspaceId, memberId } = await params
         const body = await request.json()
 
         // Verify member exists and belongs to workspace

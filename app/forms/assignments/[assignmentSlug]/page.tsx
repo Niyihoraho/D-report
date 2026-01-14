@@ -250,7 +250,8 @@ export default function FormAssignmentPage() {
                 ...prev,
                 status: result.assignment.status,
                 responses: result.assignment.responses,
-                submittedAt: result.assignment.submittedAt
+                submittedAt: result.assignment.submittedAt,
+                history: result.assignment.submissions
             } : null)
         } catch (error) {
             console.error('Error submitting form:', error)

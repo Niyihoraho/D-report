@@ -4,10 +4,10 @@ import { prisma } from '@/lib/prisma'
 // GET /api/workspaces/[id]/assignments/[assignmentId]
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string; assignmentId: string } }
+    { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
     try {
-        const { id: workspaceId, assignmentId } = params
+        const { id: workspaceId, assignmentId } = await params
 
         const assignment = await prisma.formAssignment.findUnique({
             where: { id: assignmentId },
@@ -55,10 +55,10 @@ export async function GET(
 // DELETE /api/workspaces/[id]/assignments/[assignmentId]
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string; assignmentId: string } }
+    { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
     try {
-        const { id: workspaceId, assignmentId } = params
+        const { id: workspaceId, assignmentId } = await params
 
         // Verify assignment exists and belongs to workspace
         const assignment = await prisma.formAssignment.findUnique({
@@ -100,10 +100,10 @@ export async function DELETE(
 // PATCH /api/workspaces/[id]/assignments/[assignmentId]
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string; assignmentId: string } }
+    { params }: { params: Promise<{ id: string; assignmentId: string }> }
 ) {
     try {
-        const { id: workspaceId, assignmentId } = params
+        const { id: workspaceId, assignmentId } = await params
         const body = await request.json()
 
         // Verify assignment exists and belongs to workspace
