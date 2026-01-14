@@ -24,6 +24,12 @@ export async function POST(
 ) {
     const { id: workspaceId } = await params
 
+    // Determine base URL dynamically for QR codes and links
+    const host = request.headers.get('host') || 'localhost:3000'
+    const protocol = host.includes('localhost') ? 'http' : 'https'
+    const baseUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
+
+
     try {
         const body = await request.json()
         const { reportType, memberIds, templateData } = body as {
@@ -126,7 +132,7 @@ export async function POST(
             console.log('✅ ENTERING ATTENDANCE BRANCH (Type match or group report detected)')
             const referenceNumber = await generateReferenceNumber(reportType)
             const qrCodeData = await generateQRCode(
-                `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/verify/${referenceNumber}`
+                `${baseUrl}/verify/${referenceNumber}`
             )
 
             // Map all members to the attendance format
@@ -201,7 +207,7 @@ export async function POST(
                 const referenceNumber = await generateReferenceNumber(reportType)
 
                 // Generate QR code for verification
-                const verificationUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/verify/${referenceNumber}`
+                const verificationUrl = `${baseUrl}/verify/${referenceNumber}`
                 const qrCodeData = await generateQRCode(verificationUrl)
 
                 // Create report metadata

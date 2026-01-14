@@ -36,6 +36,11 @@ export async function GET(
             }
         })
 
+        // Determine base URL dynamically
+        const host = request.headers.get('host') || 'localhost:3000'
+        const protocol = host.includes('localhost') ? 'http' : 'https'
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || `${protocol}://${host}`
+
         const formattedAssignments = assignments.map(assignment => ({
             id: assignment.id,
             member: {
@@ -47,7 +52,7 @@ export async function GET(
             dueDate: assignment.dueDate,
             submittedAt: assignment.submittedAt,
             publicSlug: assignment.publicSlug,
-            publicLink: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/forms/assignments/${assignment.publicSlug}`
+            publicLink: `${baseUrl}/forms/assignments/${assignment.publicSlug}`
         }))
 
         return NextResponse.json(formattedAssignments)
