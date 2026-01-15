@@ -40,11 +40,15 @@ export async function generatePDF(html: string, options?: PDFOptions): Promise<B
                 // On Vercel, it sometimes needs help locating the binary if not using a specific layer
                 // but @sparticuz/chromium usually handles this.
 
+                const executablePath = await chromium.executablePath();
+                console.log('Serverless Executable Path:', executablePath);
+
                 browser = await puppeteerCore.launch({
                     args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-                    defaultViewport: { width: 1920, height: 1080 },
-                    executablePath: await chromium.executablePath(),
-                    headless: true, // chromium.headless might be specific to certain versions
+                    defaultViewport: (chromium as any).defaultViewport,
+                    executablePath: executablePath,
+                    headless: (chromium as any).headless,
+                    ignoreDefaultArgs: ['--disable-extensions'],
                 })
             } catch (launchError) {
                 console.error('SERVERLESS LAUNCH ERROR:', launchError)

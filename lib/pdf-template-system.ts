@@ -54,9 +54,10 @@ export async function generatePdfFromHtml(
 
         return await generatePDF(html, pdfOptions)
     } catch (error) {
-        logToFile('Error generating PDF in exporter:', error instanceof Error ? error.message : error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logToFile('Error generating PDF in exporter:', errorMessage)
         console.error('Error generating PDF in exporter:', error)
-        throw new Error('Failed to generate PDF')
+        throw new Error(`PDF Generation Failed: ${errorMessage}`)
     }
 }
 

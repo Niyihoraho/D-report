@@ -609,9 +609,11 @@ export async function generatePdfFromHtml(
         // Use the centralized generator which handles serverless environments
         return await generatePDF(html, pdfOptions)
     } catch (error) {
-        logToFile('Error generating PDF in exporter:', error instanceof Error ? error.message : error)
+        const errorMessage = error instanceof Error ? error.message : String(error)
+        logToFile('Error generating PDF in exporter:', errorMessage)
         console.error('Error generating PDF in exporter:', error)
-        throw new Error('Failed to generate PDF')
+        // Propagate the real error so the API can return it
+        throw new Error(`PDF Generation Failed: ${errorMessage}`)
     }
 }
 
