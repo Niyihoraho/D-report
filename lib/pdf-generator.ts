@@ -1,5 +1,4 @@
 import puppeteer, { PDFOptions } from 'puppeteer'
-import chromium from '@sparticuz/chromium'
 import puppeteerCore from 'puppeteer-core'
 
 /**
@@ -29,28 +28,36 @@ export async function generatePDF(html: string, options?: PDFOptions): Promise<B
         })
 
         if (isServerless) {
-            // Serverless configuration using sparticuz/chromium
-            console.log('🚀 Using Serverless Puppeteer (Sparticuz/Chromium)')
+            // Serverless configuration using chromium-min (CDN-based binary)
+            console.log('🚀 Using Serverless Puppeteer (Chromium-Min CDN)')
 
             try {
-                // Modern configuration for @sparticuz/chromium
-                (chromium as any).setHeadlessMode = true;
-                (chromium as any).setGraphicsMode = false;
+                // Import chromium-min dynamically to avoid bundling issues
+                const chromium = await import('@sparticuz/chromium-min')
 
-                // For Netlify, we might need to explicitly point to the right location or trust the library defaults
-                // logging specific environment variables that might help debug path issues
-                console.log('AWS_LAMBDA_TASK_ROOT:', process.env.AWS_LAMBDA_TASK_ROOT);
+                // Use CDN-hosted Chromium binary (much smaller and doesn't require bundling)
+                const executablePath = await chromium.default.executablePath(
+                    'https://github.com/Sparticuz/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar'
+                )
 
-                const executablePath = await chromium.executablePath();
-                console.log('Serverless Executable Path:', executablePath);
+                console.log('Serverless Executable Path:', executablePath)
 
                 browser = await puppeteerCore.launch({
-                    args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
-                    defaultViewport: (chromium as any).defaultViewport,
+                    args: [
+                        ...(chromium.default as any).args,
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu',
+                        '--single-process',
+                        '--no-zygote'
+                    ],
+                    defaultViewport: (chromium.default as any).defaultViewport,
                     executablePath: executablePath,
-                    headless: (chromium as any).headless,
-                    ignoreDefaultArgs: ['--disable-extensions'],
+                    headless: (chromium.default as any).headless,
                 })
+
+                console.log('✅ Browser launched successfully')
             } catch (launchError) {
                 console.error('SERVERLESS LAUNCH ERROR:', launchError)
                 throw launchError
@@ -78,7 +85,7 @@ export async function generatePDF(html: string, options?: PDFOptions): Promise<B
 
         // Set content and wait for all resources to load
         await page.setContent(html, {
-            waitUntil: 'networkidle0', // Stricter wait ensuring meaningful content is loaded
+            waitUntil: 'networkidle0',
             timeout: 60000
         })
 

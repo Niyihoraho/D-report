@@ -1,0 +1,15 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  # Increase function size limit for Chromium
+  node_bundler = "esbuild"
+  included_files = ["node_modules/@sparticuz/chromium/**"]
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Environment variables for serverless functions
+[functions.environment]
+  CHROME_BIN = "/opt/buildhome/.cache/chromium"
