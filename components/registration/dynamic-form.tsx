@@ -401,6 +401,7 @@ function FileUploadField({ value, onChange, label }: { value?: string, onChange:
 
     const triggerUpload = (e: React.MouseEvent) => {
         e.preventDefault() // Prevent any form submission
+        e.stopPropagation() // Prevent event bubbling
         fileInputRef.current?.click()
     }
 
