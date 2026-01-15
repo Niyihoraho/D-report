@@ -1,4 +1,5 @@
 import puppeteer, { Browser, Page, PDFOptions } from 'puppeteer'
+import { generatePDF } from './pdf-generator'
 
 export interface PdfExportOptions {
     format?: 'A4' | 'Letter' | 'Legal'
@@ -596,36 +597,8 @@ export async function generatePdfFromHtml(
     html: string,
     options: PdfExportOptions = {}
 ): Promise<Buffer> {
-    let browser: Browser | null = null
-
     try {
-        logToFile('PDF Exporter: Launching Puppeteer...')
-        // Try to get executable path from environment or default
-        const executablePath = puppeteer.executablePath()
-        logToFile('PDF Exporter: Executable Path resolved to ' + executablePath)
-
-        // Launch browser
-        browser = await puppeteer.launch({
-            headless: true,
-            executablePath: fs.existsSync(executablePath) ? executablePath : undefined,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage',
-                '--disable-gpu',
-            ],
-        })
-        logToFile('PDF Exporter: Browser launched successfully')
-
-        const page: Page = await browser.newPage()
-
-        // Set content
-        logToFile('PDF Exporter: Setting page content...')
-        await page.setContent(html, {
-            waitUntil: 'domcontentloaded',
-            timeout: 30000,
-        })
-        logToFile('PDF Exporter: Page content set')
+        logToFile('PDF Exporter: Delegating to shared generatePDF...')
 
         // Merge options with defaults
         const pdfOptions: PDFOptions = {
@@ -633,21 +606,12 @@ export async function generatePdfFromHtml(
             ...options,
         }
 
-        // Generate PDF
-        logToFile('PDF Exporter: Generating PDF buffer...')
-        const pdf = await page.pdf(pdfOptions)
-        logToFile(`PDF Exporter: PDF buffer generated. Size: ${pdf.length}`)
-
-        return Buffer.from(pdf)
+        // Use the centralized generator which handles serverless environments
+        return await generatePDF(html, pdfOptions)
     } catch (error) {
         logToFile('Error generating PDF in exporter:', error instanceof Error ? error.message : error)
         console.error('Error generating PDF in exporter:', error)
         throw new Error('Failed to generate PDF')
-    } finally {
-        if (browser) {
-            await browser.close()
-            logToFile('PDF Exporter: Browser closed')
-        }
     }
 }
 

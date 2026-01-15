@@ -1,56 +1,84 @@
-import puppeteer from 'puppeteer'
+import puppeteer, { PDFOptions } from 'puppeteer'
 import chromium from '@sparticuz/chromium'
 import puppeteerCore from 'puppeteer-core'
 
 /**
  * Generate a PDF from HTML content using Puppeteer
  * @param html - Complete HTML string to convert to PDF
+ * @param options - Optional PDF generation options
  * @returns Buffer containing the generated PDF
  */
-export async function generatePDF(html: string): Promise<Buffer> {
+export async function generatePDF(html: string, options?: PDFOptions): Promise<Buffer> {
     let browser: any = null
 
     try {
-        // Detect if running in a serverless environment (Netlify/AWS Lambda)
-        const isServerless = process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.NETLIFY || process.env.NEXT_PUBLIC_IS_SERVERLESS
+        // Detect if running in a serverless environment (Netlify/AWS Lambda/Vercel)
+        const isServerless =
+            process.env.AWS_LAMBDA_FUNCTION_VERSION ||
+            process.env.NETLIFY ||
+            process.env.VERCEL ||
+            process.env.NEXT_PUBLIC_IS_SERVERLESS
+
+        console.log('--- PDF Generator Debug ---')
+        console.log('Environment Check:', {
+            AWS_LAMBDA: !!process.env.AWS_LAMBDA_FUNCTION_VERSION,
+            NETLIFY: !!process.env.NETLIFY,
+            VERCEL: !!process.env.VERCEL,
+            NEXT_PUBLIC_IS_SERVERLESS: !!process.env.NEXT_PUBLIC_IS_SERVERLESS,
+            isServerless: !!isServerless
+        })
 
         if (isServerless) {
             // Serverless configuration using sparticuz/chromium
             console.log('🚀 Using Serverless Puppeteer (Sparticuz/Chromium)')
 
-            // Configure font support for specialized characters if needed
-            // await chromium.font('https://raw.githack.com/googlei18n/noto-emoji/master/fonts/NotoColorEmoji.ttf');
+            // Helper for local testing of serverless logic if needed, or specific path overrides
+            // const executablePath = await chromium.executablePath() 
 
-            browser = await puppeteerCore.launch({
-                args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox'],
-                defaultViewport: { width: 1920, height: 1080 },
-                executablePath: await chromium.executablePath(),
-                headless: true,
-            })
+            try {
+                // Determine the correct executable path
+                // On Vercel, it sometimes needs help locating the binary if not using a specific layer
+                // but @sparticuz/chromium usually handles this.
+
+                browser = await puppeteerCore.launch({
+                    args: [...chromium.args, '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
+                    defaultViewport: { width: 1920, height: 1080 },
+                    executablePath: await chromium.executablePath(),
+                    headless: true, // chromium.headless might be specific to certain versions
+                })
+            } catch (launchError) {
+                console.error('SERVERLESS LAUNCH ERROR:', launchError)
+                throw launchError
+            }
         } else {
             // Local development fallback using standard Puppeteer
             console.log('💻 Using Local Puppeteer')
-            browser = await puppeteer.launch({
-                headless: true,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu'
-                ]
-            })
+            try {
+                browser = await puppeteer.launch({
+                    headless: true,
+                    args: [
+                        '--no-sandbox',
+                        '--disable-setuid-sandbox',
+                        '--disable-dev-shm-usage',
+                        '--disable-gpu'
+                    ]
+                })
+            } catch (launchError) {
+                console.error('LOCAL LAUNCH ERROR:', launchError)
+                throw launchError
+            }
         }
 
         const page = await browser.newPage()
 
         // Set content and wait for all resources to load
         await page.setContent(html, {
-            waitUntil: 'networkidle0',
-            timeout: 30000
+            waitUntil: 'networkidle0', // Stricter wait ensuring meaningful content is loaded
+            timeout: 60000
         })
 
-        // Generate PDF with A4 format
-        const pdf = await page.pdf({
+        // Default options if none provided
+        const finalOptions: PDFOptions = options || {
             format: 'A4',
             printBackground: true,
             margin: {
@@ -59,7 +87,10 @@ export async function generatePDF(html: string): Promise<Buffer> {
                 bottom: '20mm',
                 left: '20mm'
             }
-        })
+        }
+
+        // Generate PDF
+        const pdf = await page.pdf(finalOptions)
 
         return Buffer.from(pdf)
     } catch (error) {

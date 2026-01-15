@@ -17,6 +17,9 @@ function normalizeKey(key: string): string {
     return key.toLowerCase().replace(/[^a-z0-9]/g, '')
 }
 
+// Allow longer timeout for PDF generation on Vercel (up to 60s for Pro, 10s for Hobby - this instructs Vercel to allow max)
+export const maxDuration = 60;
+
 // POST /api/workspaces/[id]/reports/generate - Generate PDF reports
 export async function POST(
     request: NextRequest,

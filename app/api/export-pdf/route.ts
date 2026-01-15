@@ -3,6 +3,9 @@ import { generateReportPdf } from '@/lib/pdf-template-system'
 import { ReportData } from '@/lib/templates/types'
 import { prisma } from '@/lib/prisma'
 
+// Allow longer timeout for PDF generation on Vercel
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
     try {
         console.log('PDF Export: Received request')
