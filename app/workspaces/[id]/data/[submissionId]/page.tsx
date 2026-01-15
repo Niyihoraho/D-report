@@ -194,8 +194,10 @@ export default function SubmissionDetailsPage() {
             })
 
             if (!response.ok) {
-                const error = await response.json()
-                throw new Error(error.error || 'Failed to generate PDF')
+                const errorBody = await response.json()
+                const errorMessage = errorBody.error || 'Failed to generate PDF'
+                const errorDetails = errorBody.details || ''
+                throw new Error(`${errorMessage}${errorDetails ? `: ${errorDetails}` : ''}`)
             }
 
             const data = await response.json()
@@ -231,9 +233,14 @@ export default function SubmissionDetailsPage() {
             }, 100)
 
             toast.success('PDF exported successfully!')
-        } catch (error) {
+        } catch (error: any) {
             console.error('Export error:', error)
-            toast.error(error instanceof Error ? error.message : 'Failed to export PDF')
+            const errorMsg = error.message || 'Failed to export PDF'
+            // If the server sent details, try to append them or show them
+            // The fetch block above throws Error(error.error) - we might want to include details there
+            toast.error(errorMsg, {
+                description: "If this persists, please contact support with this error."
+            })
         } finally {
             setExporting(false)
         }
