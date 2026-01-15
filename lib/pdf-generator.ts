@@ -32,13 +32,14 @@ export async function generatePDF(html: string, options?: PDFOptions): Promise<B
             // Serverless configuration using sparticuz/chromium
             console.log('🚀 Using Serverless Puppeteer (Sparticuz/Chromium)')
 
-            // Helper for local testing of serverless logic if needed, or specific path overrides
-            // const executablePath = await chromium.executablePath() 
-
             try {
-                // Determine the correct executable path
-                // On Vercel, it sometimes needs help locating the binary if not using a specific layer
-                // but @sparticuz/chromium usually handles this.
+                // Modern configuration for @sparticuz/chromium
+                (chromium as any).setHeadlessMode = true;
+                (chromium as any).setGraphicsMode = false;
+
+                // For Netlify, we might need to explicitly point to the right location or trust the library defaults
+                // logging specific environment variables that might help debug path issues
+                console.log('AWS_LAMBDA_TASK_ROOT:', process.env.AWS_LAMBDA_TASK_ROOT);
 
                 const executablePath = await chromium.executablePath();
                 console.log('Serverless Executable Path:', executablePath);
