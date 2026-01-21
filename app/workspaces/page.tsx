@@ -88,7 +88,8 @@ export default function WorkspacesPage() {
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
+            {/* Desktop View */}
+            <div className="hidden md:block bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden shadow-sm">
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-b border-gray-100 dark:border-gray-800">
@@ -174,6 +175,65 @@ export default function WorkspacesPage() {
                         }
                     </TableBody>
                 </Table>
+            </div>
+
+            {/* Mobile View */}
+            <div className="md:hidden space-y-4">
+                {workspaces.length === 0 ? (
+                    <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-8 text-center flex flex-col items-center">
+                        <div className="w-16 h-16 rounded-full bg-gray-50 dark:bg-gray-800/50 flex items-center justify-center text-gray-300 dark:text-gray-600 mb-4">
+                            <LayoutGrid className="w-8 h-8 opacity-50" />
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">No workspaces yet</h3>
+                        <p className="text-sm text-gray-500 mb-4 mt-2">
+                            Create your first workspace to start managing organizations.
+                        </p>
+                        <Button
+                            onClick={() => setCreateDialogOpen(true)}
+                            className="w-full rounded-xl bg-[#6C5DD3] hover:bg-[#5b4eb3]"
+                        >
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Workspace
+                        </Button>
+                    </div>
+                ) : (
+                    workspaces.map((workspace) => (
+                        <div key={workspace.id} className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-4 shadow-sm flex flex-col gap-4">
+                            <div className="flex items-start justify-between">
+                                <Link
+                                    href={`/workspaces/${workspace.id}`}
+                                    className="flex items-center gap-3"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6C5DD3]/10 to-[#6C5DD3]/5 flex items-center justify-center text-lg font-bold text-[#6C5DD3]">
+                                        {workspace.name.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-gray-900 dark:text-gray-100">{workspace.name}</h3>
+                                        <p className="text-xs text-gray-500">{workspace.slug}</p>
+                                    </div>
+                                </Link>
+                                <WorkspaceActions
+                                    workspace={{
+                                        ...workspace,
+                                        memberCount: workspace._count?.members || 0
+                                    }}
+                                    onDelete={fetchWorkspaces}
+                                    onUpdate={fetchWorkspaces}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between text-sm pt-2 border-t border-gray-50 dark:border-gray-800">
+                                <WorkspaceTypeBadge type={workspace.type} className="shadow-none" />
+                                <span className="text-gray-500/80">
+                                    {new Date(workspace.createdAt).toLocaleDateString('en-US', {
+                                        month: 'short',
+                                        day: 'numeric',
+                                        year: 'numeric'
+                                    })}
+                                </span>
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
             <CreateWorkspaceDialog

@@ -31,7 +31,8 @@ function logToFile(message: string, data?: any) {
  */
 export async function generateReportHTML(data: ReportData): Promise<string> {
     const workspaceId = data.workspace?.id || 'default'
-    const generator = getTemplateForWorkspace(workspaceId)
+    const workspaceName = data.workspace?.name
+    const generator = getTemplateForWorkspace(workspaceId, workspaceName)
     return await generator(data)
 }
 

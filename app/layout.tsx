@@ -33,7 +33,7 @@ export default function RootLayout({
         >
           <div className="min-h-screen bg-background">
             <TopNav />
-            <main className="container mx-auto p-6 space-y-8">
+            <main className="container mx-auto p-4 md:p-6 space-y-8">
               {children}
             </main>
           </div>
